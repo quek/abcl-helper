@@ -20,6 +20,7 @@
 (jimport |java.lang.String|)
 |Object|
 |java.lang.Object|
+|String|
 (jnew (jconstructor |Object|))
 
 (new |Object|)
