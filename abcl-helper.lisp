@@ -1,26 +1,26 @@
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (asdf:oos 'asdf:load-op :cl-ppcre))
+(in-package :abcl-helper)
 
 (defmacro jimport (fqcn &optional (package *package*))
   (let ((fqcn (string fqcn))
         (package package))
-    (ppcre:register-groups-bind (class-name)
-        (".*\\.(.*)" fqcn)
-      (let ((class (jclass fqcn)))
-        `(progn
-           (defparameter ,(intern fqcn package) ,class)
-           (defparameter ,(intern class-name package) ,class)
-           ,@(map 'list
-                  (lambda (method)
-                    (let ((symbol (intern (jmethod-name method) package))
-                          (fn (if (jmember-static-p method)
-                                  #'jstatic
-                                  #'jcall)))
-                      `(progn
-                         (defun ,symbol (&rest args)
-                           (apply ,fn ,(symbol-name symbol) args))
-                         (defparameter ,symbol #',symbol))))
-                  (jclass-methods class)))))))
+    (ppcre:register-groups-bind
+     (class-name)
+     (".*\\.(.*)" fqcn)
+     (let ((class (jclass fqcn)))
+       `(progn
+          (defparameter ,(intern fqcn package) ,class)
+          (defparameter ,(intern class-name package) ,class)
+          ,@(map 'list
+                 (lambda (method)
+                   (let ((symbol (intern (jmethod-name method) package))
+                         (fn (if (jmember-static-p method)
+                                 'jstatic
+                                 'jcall)))
+                     `(progn
+                        (defun ,symbol (&rest args)
+                          (apply ',fn ,(symbol-name symbol) args))
+                        (defparameter ,symbol #',symbol))))
+                 (jclass-methods class)))))))
 
 (defun new (class &rest args)
   (apply #'jnew
